@@ -1,4 +1,6 @@
+pub mod modules;
 
+use modules::{todotask, ToDoTask, TODOTASK};
 use sewup_derive::{ewasm_constructor, ewasm_fn, ewasm_fn_sig, ewasm_main, ewasm_test};
 
 #[ewasm_constructor]
@@ -8,7 +10,6 @@ fn constructor() {}
 fn handler() -> anyhow::Result<sewup::primitives::EwasmAny> {
     Ok(().into())
 }
-
 
 #[ewasm_main(auto)]
 fn main() -> anyhow::Result<sewup::primitives::EwasmAny> {
