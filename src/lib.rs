@@ -4,7 +4,12 @@ use modules::{todotask, ToDoTask, TODOTASK};
 use sewup_derive::{ewasm_constructor, ewasm_fn, ewasm_fn_sig, ewasm_main, ewasm_test};
 
 #[ewasm_constructor]
-fn constructor() {}
+fn constructor() {
+    let mut db = sewup::rdb::Db::new().expect("there is no return for constructor currently");
+    db.create_table::<ToDoTask>();
+    db.commit()
+        .expect("there is no return for constructor currently");
+}
 
 #[ewasm_fn]
 fn handler() -> anyhow::Result<sewup::primitives::EwasmAny> {
