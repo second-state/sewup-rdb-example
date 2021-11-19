@@ -11,18 +11,16 @@ fn constructor() {
         .expect("there is no return for constructor currently");
 }
 
-#[ewasm_fn]
-fn handler() -> anyhow::Result<sewup::primitives::EwasmAny> {
-    Ok(().into())
-}
-
 #[ewasm_main(auto)]
 fn main() -> anyhow::Result<sewup::primitives::EwasmAny> {
     use sewup_derive::ewasm_input_from;
     let contract = sewup::primitives::Contract::new()?;
 
     match contract.get_function_selector()? {
-        ewasm_fn_sig!(handler) => handler(),
+        ewasm_fn_sig!(todotask::get) => ewasm_input_from!(contract move todotask::get),
+        ewasm_fn_sig!(todotask::create) => ewasm_input_from!(contract move todotask::create),
+        ewasm_fn_sig!(todotask::update) => ewasm_input_from!(contract move todotask::update),
+        ewasm_fn_sig!(todotask::delete) => ewasm_input_from!(contract move todotask::delete),
         _ => return Err(anyhow::anyhow!("Unknow Error")),
     }
 }
@@ -34,6 +32,6 @@ mod tests {
 
     #[ewasm_test]
     fn test_handler() {
-        ewasm_auto_assert_eq!(handler(), ());
+        assert!(true);
     }
 }
