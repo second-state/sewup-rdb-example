@@ -7,5 +7,5 @@ use sewup_derive::{SizedString, Table};
 pub struct ToDoTask {
     pub completed: bool,
     pub content: SizedString!(50),
-    pub(crate) owner: Address,
+    pub owner: Address,
 }
