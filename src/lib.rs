@@ -1,8 +1,14 @@
 pub mod modules;
 
 use modules::{todotask, ToDoTask, TODOTASK};
+use serde_derive::{Deserialize, Serialize};
 use sewup::primitives::EwasmAny;
 use sewup_derive::{ewasm_constructor, ewasm_fn, ewasm_fn_sig, ewasm_main, ewasm_test};
+
+#[derive(Serialize, Deserialize)]
+pub struct Input {
+    id: usize,
+}
 
 #[ewasm_constructor]
 fn constructor() {
@@ -58,6 +64,7 @@ fn main() -> anyhow::Result<sewup::primitives::EwasmAny> {
     match contract.get_function_selector()? {
         ewasm_fn_sig!(query_with_address) => query_with_address(),
         ewasm_fn_sig!(create_with_address) => ewasm_input_from!(contract move create_with_address),
+        ewasm_fn_sig!(set_task_complete) => ewasm_input_from!(contract move set_task_complete),
         ewasm_fn_sig!(todotask::update) => ewasm_input_from!(contract move todotask::update),
         ewasm_fn_sig!(todotask::delete) => ewasm_input_from!(contract move todotask::delete),
         _ => return Err(anyhow::anyhow!("Unknow Error")),
@@ -88,6 +95,14 @@ mod tests {
         expect_empty_output.records = vec![];
         ewasm_auto_assert_eq!(query_with_address(), expect_empty_output);
 
+        ewasm_auto_assert_eq!(
+            query_with_address() by  "8663DBF0cC68AaF37fC8BA262F2df4c666a41993",
+            expect_output
+        );
+
+        ewasm_assert_ok!(set_task_complete(Input { id: 1 }) by "8663DBF0cC68AaF37fC8BA262F2df4c666a41993");
+
+        expect_output.records[0].completed = Some(true);
         ewasm_auto_assert_eq!(
             query_with_address() by  "8663DBF0cC68AaF37fC8BA262F2df4c666a41993",
             expect_output
