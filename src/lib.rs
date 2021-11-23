@@ -56,6 +56,26 @@ fn set_task_complete(input: Input) -> Result<EwasmAny, anyhow::Error> {
     Err(anyhow::anyhow!("ToDoTask Not Found"))
 }
 
+#[ewasm_fn]
+fn delete_completed_task(input: Input) -> Result<EwasmAny, anyhow::Error> {
+    let caller = sewup::utils::caller();
+
+    let mut table = sewup::rdb::Db::load(None)?.table::<ToDoTask>()?;
+
+    for (id, mut task) in table.filter_records(&|t: &ToDoTask| t.owner == caller)? {
+        if id == input.id {
+            if !task.completed {
+                return Err(anyhow::anyhow!("ToDoTask Not Completed"));
+            }
+            table.update_record(id, None)?;
+            table.commit()?;
+            return Ok(().into());
+        }
+    }
+
+    Err(anyhow::anyhow!("ToDoTask Not Found"))
+}
+
 #[ewasm_main(auto)]
 fn main() -> anyhow::Result<sewup::primitives::EwasmAny> {
     use sewup_derive::ewasm_input_from;
@@ -66,7 +86,9 @@ fn main() -> anyhow::Result<sewup::primitives::EwasmAny> {
         ewasm_fn_sig!(create_with_address) => ewasm_input_from!(contract move create_with_address),
         ewasm_fn_sig!(set_task_complete) => ewasm_input_from!(contract move set_task_complete),
         ewasm_fn_sig!(todotask::update) => ewasm_input_from!(contract move todotask::update),
-        ewasm_fn_sig!(todotask::delete) => ewasm_input_from!(contract move todotask::delete),
+        ewasm_fn_sig!(delete_completed_task) => {
+            ewasm_input_from!(contract move delete_completed_task)
+        }
         _ => return Err(anyhow::anyhow!("Unknow Error")),
     }
 }
@@ -103,6 +125,14 @@ mod tests {
         ewasm_assert_ok!(set_task_complete(Input { id: 1 }) by "8663DBF0cC68AaF37fC8BA262F2df4c666a41993");
 
         expect_output.records[0].completed = Some(true);
+        ewasm_auto_assert_eq!(
+            query_with_address() by  "8663DBF0cC68AaF37fC8BA262F2df4c666a41993",
+            expect_output
+        );
+
+        ewasm_assert_ok!(delete_completed_task(Input { id: 1 }) by "8663DBF0cC68AaF37fC8BA262F2df4c666a41993");
+
+        expect_output.records = vec![];
         ewasm_auto_assert_eq!(
             query_with_address() by  "8663DBF0cC68AaF37fC8BA262F2df4c666a41993",
             expect_output
