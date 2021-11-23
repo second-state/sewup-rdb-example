@@ -3,7 +3,7 @@ use sewup::types::Address;
 use sewup::types::Raw;
 use sewup_derive::{SizedString, Table};
 
-#[derive(Table, Default, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Table, Default, Clone, PartialEq, Serialize, Deserialize, Debug)]
 pub struct ToDoTask {
     pub completed: bool,
     pub content: SizedString!(50),
